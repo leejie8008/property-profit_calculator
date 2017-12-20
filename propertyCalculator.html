@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Calculator</title>
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.4/css/bootstrap-select.min.css">
+	<script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.4/js/bootstrap-select.min.js"></script>
+	<style type="text/css">
+		* {
+			margin: 10px 10px 10px 10px;
+		}
+
+		body {
+			margin-left: 30px;
+			margin-top: 30px;
+			background-image: url(background.png);
+		}
+
+		.header-top {
+	  		background-image: url('https://images6.alphacoders.com/372/thumb-1920-372492.jpg'); 
+	  			background-size: cover;
+	  		padding-top: 60px;
+	  		/*background-size: contain;
+	  		background-repeat: none;*/
+		}
+
+		.header-text {
+	  		margin-bottom: 20px;
+	  		color: white;
+
+		}
+	</style>
+</head>
+<body>
+	<div class="header-top">
+	    <div class="container">
+      		<h1 class="header-text">Calculator for Property Profit Estimation</h1>
+	    </div>
+  	</div>
+	<form>
+		<div class="form-group">
+			<label>Select development type: </label><br>
+			<select id="DevelopmentType" name="Development Type" class="selectpicker show-tick" data-width="auto" data-live-search="true">
+				<option value="no" selected="selected">Please select a development type</option>	
+				<optgroup label="Residential">
+					<option value="SingleTerrace" data-tokens="residential single storey terrace">Single Storey Terrace House</option>
+					<option value="DoubleTerrace" data-tokens="residential double storey terrace">Double Storey Terrace House</option>
+					<option value="Cluster" data-tokens="residential cluster">Cluster House</option>
+					<option value="SemiD" data-tokens="residential semi detached">Semi Detached House</option>
+					<option value="Bungalow" data-tokens="residential bungalow">Bungalow House</option>
+					<option value="Apartment" data-tokens="residential apartment">Apartment</option>
+					<option value="Flat" data-tokens="residential flat">Flat</option>
+				</optgroup>	
+				<optgroup label="Commercial">
+					<option value="TerraceShop" data-tokens="commercial terrace shop">Terrace Shop</option>
+					<option value="ServicedApartment" data-tokens="commercial serviced apartment">Servied Apartment</option>
+				</optgroup>
+				<optgroup label="Industrial">
+					<option value="TerraceFactory" data-tokens="industry terrace factory">Terrace Factory</option>
+					<option value="SemiDFactory" data-tokens="industry semi detached factory">Semi Detached Factory</option>
+				</optgroup>
+			</select>	
+			<br>
+
+			<!-- display result  -->
+			<label>Land area (Acre): <input id="landarea" type="text" name="Land Area" class="form-control"></label>
+			<label>Land cost (RM/ft<sup>2</sup>): <input id="landcost" type="text" name="landcost" class="form-control"></label>
+			<label>Unit selling price (RM/ft<sup>2</sup>): <input id="psf" type="text" name="psf" class="form-control"></label>
+			<label>Density: <input id="density" type="text" name="Density" class="form-control"></label>
+			<label>Built up: <input id="builtup" type="text" name="Built Up" class="form-control"></label>
+			<div id="plotratioinput" hidden>
+				<label>Plot ratio: <input id="plotratio" type="text" name="Plot ratio" class="form-control" value="4"></label>
+			</div>
+			<br>
+			<button type="button" class="btn btn-primary btn-lg" onclick="calculate();" style="margin-top: 10px; margin-left: 10px">Calculate</button><br>
+
+			<label>GDC1: <input id="gdc1" type="text" name="gdc1" class="form-control" disabled></label>
+			<label>GDC2: <input id="gdc2" type="text" name="gdc2" class="form-control" disabled></label>
+			<label>GDC3: <input id="gdc3" type="text" name="gdc3" class="form-control" disabled></label>
+			<label>GDC4: <input id="gdc4" type="text" name="gdc4" class="form-control" disabled></label>
+			<label>GDC5: <input id="gdc5" type="text" name="gdc5" class="form-control" disabled></label><br>
+			<label>GDV: <input id="gdv" type="text" name="gdv" class="form-control" disabled></label>
+			<label>GDC: <input id="gdc" type="text" name="gdc" class="form-control" disabled></label><br>
+			<label>Profit: <input id="profit" type="text" name="profit" class="form-control" disabled></label>
+			<label>Profit margin: <input id="profitmargin" type="text" name="profitmargin" class="form-control" disabled></label>
+
+		</div>
+	</form>
+</body>
+<script type="text/javascript">
+
+	var selectionType;
+	var developType;
+
+	$(document).ready(function(){
+	    $("select").change(function(){
+	        developType = $("#DevelopmentType").val();
+	        if (developType == "ServicedApartment") {
+	        	$("#plotratioinput").show();
+	        }
+
+	        else if (developType == "no") {
+	        	alert("Please select a development type");
+	        }
+
+	        else {
+	        	$("#plotratioinput").hide();
+	        }
+	        createObject(developType);
+	    });
+
+	    // display input for plot ratio when choose commercial apartment
+	    $("#plotratio").change(function(){
+	        $("#density").val($("#plotratio").val() * 43560);
+	    });
+
+	    function createObject(developType) {
+
+	    	if (developType == "SingleTerrace") {
+	    		selectionType = new SingleTerrace;
+	    	}  
+
+	    	else if (developType == "DoubleTerrace") {
+	    		selectionType = new DoubleTerrace;
+	    	}
+
+	    	else if (developType == "Cluster") {
+	    		selectionType = new Cluster;
+	    	}
+
+	    	else if (developType == "SemiD") {
+	    		selectionType = new SemiD;
+	    	}
+
+	    	else if (developType == "Bungalow") {
+	    		selectionType = new Bungalow;
+	    	}
+
+	    	else if (developType == "Apartment") {
+	    		selectionType = new Apartment;
+	    	}
+
+	    	else if (developType == "Flat") {
+	    		selectionType = new Flat;
+	    	}
+
+	    	else if (developType == "TerraceShop") {
+	    		selectionType = new TerraceShop;
+	    	}
+
+	    	else if (developType == "ServicedApartment") {
+	    		selectionType = new ServicedApartment;
+	    	}
+
+	    	else if (developType == "TerraceFactory") {
+	    		selectionType = new TerraceFactory;
+	    	}
+
+	    	else if (developType == "SemiDFactory") {
+	    		selectionType = new SemiDFactory;
+	    	}
+
+	    	else {
+	    		console.log("Apartment type not found");
+	    	}
+
+	    	$("#density").val(selectionType.density);
+	    	$("#builtup").val(selectionType.builtup);
+	    }
+
+	    function DevelopmentType() {
+	    	var density;
+	    	var builtup;
+	    	var landarea;
+	    	var psf;
+	    	var factor1;
+	    	var factor2;
+	    	var factor3;
+	    }
+
+	    function SingleTerrace(){
+	    	DevelopmentType.call(this);
+	    	this.density = 11;
+	    	this.builtup = 1000;
+	    	this.factor1 = 113;
+	    	this.factor2 = 0.088;
+	    	this.factor3 = 500000;
+	    }
+
+	    function DoubleTerrace(){
+	    	DevelopmentType.call(this);
+	    	this.density = 11;
+	    	this.builtup = 2000;
+	    	this.factor1 = 113;
+	    	this.factor2 = 0.088;
+	    	this.factor3 = 500000;
+	    }
+
+	    function Cluster(){
+	    	DevelopmentType.call(this);
+	    	this.density = 7;
+	    	this.builtup = 2000;
+	    	this.factor1 = 115;
+	    	this.factor2 = 0.056;
+	    	this.factor3 = 500000;
+	    }
+
+	    function SemiD(){
+	    	DevelopmentType.call(this);
+	    	this.density = 7;
+	    	this.builtup = 2800;
+	    	this.factor1 = 167;
+	    	this.factor2 = 0.056;
+	    	this.factor3 = 500000;
+	    }
+
+
+	    function Bungalow(){
+	    	DevelopmentType.call(this);
+	    	this.density = 4;
+	    	this.builtup = 3500;
+	    	this.factor1 = 217;
+	    	this.factor2 = 0.032;
+	    	this.factor3 = 500000;
+	    }
+
+	    function Apartment(){
+	    	DevelopmentType.call(this);
+	    	this.density = 40;
+	    	this.builtup = 850;
+	    	this.factor1 = 155;
+	    	this.factor2 = 1;
+	    	this.factor3 = 2000000;
+	    }
+
+	    function Flat(){
+	    	DevelopmentType.call(this);
+	    	this.density = 40;
+	    	this.builtup = 720;
+	    	this.factor1 = 135;
+	    	this.factor2 = 1;
+	    	this.factor3 = 900000;
+	    }
+
+	    function TerraceShop(){
+	    	DevelopmentType.call(this);
+	    	this.density = 7;
+	    	this.builtup = 5700;
+	    	this.factor1 = 93;
+	    	this.factor2 = 1;
+	    	this.factor3 = 500000;
+	    }
+
+	    function ServicedApartment(){
+	    	DevelopmentType.call(this);
+	    	// this.plotratio = 4;
+	    	this.density = 43560 * $("#plotratio").val();
+	    	this.builtup = 1;
+	    	this.factor1 = 166;
+	    	this.factor2 = 1;
+	    	this.factor3 = 2000000;
+	    }
+
+	    function TerraceFactory(){
+	    	DevelopmentType.call(this);
+	    	this.density = 5;
+	    	this.builtup = 4000;
+	    	this.factor1 = 125;
+	    	this.factor2 = 1;
+	    	this.factor3 = 500000;
+	    }
+
+	    function SemiDFactory(){
+	    	DevelopmentType.call(this);
+	    	this.density = 2.5;
+	    	this.builtup = 7000;
+	    	this.factor1 = 125;
+	    	this.factor2 = 1;
+	    	this.factor3 = 500000;
+	    }
+	});
+
+	function calculate() {
+    	var landarea = $("#landarea").val();
+    	var landcost = $("#landcost").val();
+	    var psf = $("#psf").val();
+	    var density = $("#density").val();
+	    var builtup = $("#builtup").val();
+	    var gdv;
+	    var gdc, gdc1, gdc2, gsc3, gsc4, gdc5;
+	    var profit, profitmargin;
+
+	    // calculate gdv of all type
+	    if (developType == "ServicedApartment") {
+	    	gdv = psf * landarea * density * builtup * 0.65;
+	    }
+
+	    else {
+	    	gdv = psf * landarea * density * builtup;
+	    }
+
+	    // calculate gdc1 (Building + Piling + M&E - TNB)
+	    if ((developType == "Apartment") || (developType == "Flat")) {
+	    	gdc1 = selectionType.factor1 * landarea * density * (builtup + 660);
+	    }
+	    else {
+	    	gdc1 = selectionType.factor1 * landarea * density * builtup;
+	    }
+
+	    // calculate gdc2 (Infra + Landscape + STP + Reservoir)
+	    gdc2 = selectionType.factor3 * landarea;
+
+	    // calculate gdc3 (Land cost)
+	    gdc3 = landcost * 43560 * landarea;
+
+	 	// calculate gdc5 (TNB)
+	    if ((developType == "SingleTerrace") || (developType == "DoubleTerrace") || (developType == "Cluster") || (developType == "SemiD") || (developType == "Bungalow")) {
+	    	gdc5 = Math.round(selectionType.factor2 * landarea) * 300000;
+	    } 
+	    else {
+	    	gdc5 = 0;
+	    }
+
+
+	    // calculate gdc4 (other fees)
+	   	gdc4 = 0.13 * (gdc1 + gdc2 + gdc5) + 0.055 * gdv;
+	    
+	    // calculate gdc
+	    gdc = gdc1 + gdc2 + gdc3 + gdc4 + gdc5;
+
+	    // calculate profit
+	    profit = gdv - gdc;
+
+	    // calculate profit margin-left
+	    profitmargin = 	(gdv - gdc) / gdc * 100;
+	    profitmargin = profitmargin.toFixed(2);
+
+	    // output result
+	    $("#gdv").val("RM" + gdv.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+	    $("#gdc1").val("RM" + gdc1.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+	    $("#gdc2").val("RM" + gdc2.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+	    $("#gdc3").val("RM" + gdc3.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+	    $("#gdc4").val("RM" + gdc4.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+	    $("#gdc5").val("RM" + gdc5.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+	    $("#gdc").val("RM" + gdc.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+	    $("#profit").val("RM" + profit.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+	    $("#profitmargin").val(profitmargin + "%");
+
+	    if(profit < 0) {
+	    	$("#profit").css("background", "#e19d9d");
+    	 	$("#profitmargin").css("background", "#e19d9d");
+	    }
+	    else {
+	    	$("#profit").css("background", "lightgreen");
+    	 	$("#profitmargin").css("background", "lightgreen");
+	    }
+    }
+</script>
+</html>
